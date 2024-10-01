@@ -1,1 +1,71 @@
+import numpy as np
+import matplotlib.pyplot as plt
 
+# =============== PUNTO 1: Simulación probabilística de la doble rendija ===============
+distance_between_slits = 0.0001 
+light_wavelength = 500e-9        
+distance_to_screen = 1.0         
+screen_height = 0.05            
+num_samples = 1000               
+screen_positions = np.linspace(-screen_height/2, screen_height/2, num_samples)
+intensity_values = np.zeros(num_samples)
+wave_number = 2 * np.pi / light_wavelength
+
+# Calcular la intensidad utilizando el enfoque probabilístico
+for idx, pos in enumerate(screen_positions):
+    path_a = np.sqrt((pos + distance_between_slits/2)**2 + distance_to_screen**2)
+    path_b = np.sqrt((pos - distance_between_slits/2)**2 + distance_to_screen**2)
+    phase_a = wave_number * path_a
+    phase_b = wave_number * path_b
+    intensity_values[idx] = (np.cos((phase_a - phase_b) / 2))**2  # Probabilidad
+
+intensity_values /= np.max(intensity_values)
+plt.figure(figsize=(10, 6))
+plt.bar(screen_positions, intensity_values, width=screen_height / num_samples, color='blue', alpha=0.7)
+plt.xlabel('Posición en la pantalla (m)')
+plt.ylabel('Intensidad (Probabilidad)')
+plt.title('Simulación Probabilística del Experimento de Doble Rendija')
+plt.grid(True)
+plt.show()
+
+# =============== PUNTO 2: Simulación cuántica de la doble rendija ===============
+intensity_values = np.zeros(num_samples)
+
+# Calcular la intensidad utilizando la superposición cuántica
+for idx, pos in enumerate(screen_positions):
+    path_a = np.sqrt((pos + distance_between_slits/2)**2 + distance_to_screen**2)
+    path_b = np.sqrt((pos - distance_between_slits/2)**2 + distance_to_screen**2)
+    phase_a = wave_number * path_a
+    phase_b = wave_number * path_b
+    total_amplitude = np.abs(np.exp(1j * phase_a) + np.exp(1j * phase_b))  # Amplitud total
+    intensity_values[idx] = total_amplitude**2  # Intensidad como el cuadrado de la amplitud
+
+intensity_values /= np.max(intensity_values)
+plt.figure(figsize=(10, 6))
+plt.bar(screen_positions, intensity_values, width=screen_height / num_samples, color='green', alpha=0.7)
+plt.xlabel('Posición en la pantalla (m)')
+plt.ylabel('Intensidad (Cuántica)')
+plt.title('Simulación Cuántica del Experimento de Doble Rendija')
+plt.grid(True)
+plt.show()
+
+# =============== PUNTO 3: Simulación del experimento de doble rendija con ondas ===============
+combined_amplitude = np.zeros(num_samples, dtype=complex)
+
+# Calcular la intensidad utilizando la superposición de ondas
+for slit_position in [-distance_between_slits/2, distance_between_slits/2]:
+    for idx, pos in enumerate(screen_positions):
+        path_distance = np.sqrt((pos - slit_position)**2 + distance_to_screen**2)
+        phase_value = wave_number * path_distance
+        combined_amplitude[idx] += np.exp(1j * phase_value)  # Amplitud de la onda desde cada rendija
+
+intensity_values = np.abs(combined_amplitude)**2  
+intensity_values /= np.max(intensity_values)
+plt.figure(figsize=(10, 6))
+plt.plot(screen_positions, intensity_values, color='blue')
+plt.fill_between(screen_positions, intensity_values, color='blue', alpha=0.3)
+plt.xlabel('Posición en la pantalla (m)')
+plt.ylabel('Intensidad (Ondas)')
+plt.title('Simulación del Experimento de Doble Rendija: Patrón de Interferencia de Ondas')
+plt.grid(True)
+plt.show()
