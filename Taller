@@ -1,81 +1,93 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Parámetros de simulación
-distance_between_slits = 0.0001 
-light_wavelength = 500e-9        
-distance_to_screen = 1.0         
-screen_height = 0.05            
-num_samples = 1000               
-screen_positions = np.linspace(-screen_height / 2, screen_height / 2, num_samples)
+d = 0.5                  
+D = 5                    
+wavelength = 0.0005      
+num_particulas = 10000   
+num_posiciones = 100      
 
-# =============== PUNTO 1: Simulación probabilística de la doble rendija ===============
-def calcular_intensidad_probabilistica(screen_positions, distance_between_slits, light_wavelength, distance_to_screen):
-    wave_number = 2 * np.pi / light_wavelength
-    intensity_values = np.zeros(len(screen_positions))
+intensidad_particulas = np.zeros(num_posiciones)
+intensidad_cuantica = np.zeros(num_posiciones)
+intensidad_ondas = np.zeros(num_posiciones)
 
-    for idx, pos in enumerate(screen_positions):
-        path_a = np.sqrt((pos + distance_between_slits / 2) ** 2 + distance_to_screen ** 2)
-        path_b = np.sqrt((pos - distance_between_slits / 2) ** 2 + distance_to_screen ** 2)
-        phase_a = wave_number * path_a
-        phase_b = wave_number * path_b
-        intensity_values[idx] = (np.cos((phase_a - phase_b) / 2)) ** 2
+x = np.linspace(-1, 1, num_posiciones)
 
-    return intensity_values / np.max(intensity_values)
+### 1. Simulación del Experimento Doble Rendija con Partículas
+for _ in range(num_particulas):
+    theta = np.random.uniform(-np.pi/2, np.pi/2)
+    y1 = D * np.tan(theta) - d / 2
+    y2 = D * np.tan(theta) + d / 2
+    
+    idx1 = int((y1 + 1) * (num_posiciones - 1) / 2)
+    idx2 = int((y2 + 1) * (num_posiciones - 1) / 2)
 
-intensity_probabilistica = calcular_intensidad_probabilistica(screen_positions, distance_between_slits, light_wavelength, distance_to_screen)
-plt.figure(figsize=(10, 6))
-plt.bar(screen_positions, intensity_probabilistica, width=screen_height / num_samples, color='blue', alpha=0.7)
-plt.xlabel('Posición en la pantalla (m)')
-plt.ylabel('Intensidad (Probabilidad)')
-plt.title('Simulación Probabilística del Experimento de Doble Rendija')
-plt.grid(True)
-plt.show()
+    if 0 <= idx1 < num_posiciones:
+        intensidad_particulas[idx1] += 1
+    if 0 <= idx2 < num_posiciones:
+        intensidad_particulas[idx2] += 1
 
-# =============== PUNTO 2: Simulación cuántica de la doble rendija ===============
-def calcular_intensidad_cuantica(screen_positions, distance_between_slits, light_wavelength, distance_to_screen):
-    wave_number = 2 * np.pi / light_wavelength
-    intensity_values = np.zeros(len(screen_positions))
+intensidad_particulas /= np.max(intensidad_particulas)
 
-    for idx, pos in enumerate(screen_positions):
-        path_a = np.sqrt((pos + distance_between_slits / 2) ** 2 + distance_to_screen ** 2)
-        path_b = np.sqrt((pos - distance_between_slits / 2) ** 2 + distance_to_screen ** 2)
-        phase_a = wave_number * path_a
-        phase_b = wave_number * path_b
-        total_amplitude = np.abs(np.exp(1j * phase_a) + np.exp(1j * phase_b))
-        intensity_values[idx] = total_amplitude ** 2
+### 2. Simulación del Experimento Doble Rendija Cuántico
+for i in range(num_posiciones):
+    position_on_screen = x[i]
+    
+    r1 = np.sqrt(D**2 + (position_on_screen + d/2)**2)
+    r2 = np.sqrt(D**2 + (position_on_screen - d/2)**2)
+    
+    phi1 = (2 * np.pi / wavelength) * r1
+    phi2 = (2 * np.pi / wavelength) * r2
+    
+    A1 = np.cos(phi1)
+    A2 = np.cos(phi2)
+    
+    A_resultante = A1 + A2
+    intensidad_cuantica[i] = A_resultante**2
 
-    return intensity_values / np.max(intensity_values)
+intensidad_cuantica /= np.max(intensidad_cuantica)
 
-intensity_cuantica = calcular_intensidad_cuantica(screen_positions, distance_between_slits, light_wavelength, distance_to_screen)
-plt.figure(figsize=(10, 6))
-plt.bar(screen_positions, intensity_cuantica, width=screen_height / num_samples, color='green', alpha=0.7)
-plt.xlabel('Posición en la pantalla (m)')
-plt.ylabel('Intensidad (Cuántica)')
-plt.title('Simulación Cuántica del Experimento de Doble Rendija')
-plt.grid(True)
-plt.show()
+### 3. Simulación del Experimento Doble Rendija con Ondas (Método Huygens-Fresnel)
+for i in range(num_posiciones):
+    position_on_screen = x[i]
+    
+    r1 = np.sqrt(D**2 + (position_on_screen + d/2)**2)  
+    r2 = np.sqrt(D**2 + (position_on_screen - d/2)**2)  
+    
+    amplitude_1 = (np.sin(2 * np.pi * r1 / wavelength)) / r1   
+    amplitude_2 = (np.sin(2 * np.pi * r2 / wavelength)) / r2   
+    
+    A_resultante_huygens = amplitude_1 + amplitude_2
+    
+    intensidad_ondas[i] = A_resultante_huygens**2
 
-# =============== PUNTO 3: Simulación del experimento de doble rendija con ondas ===============
-def calcular_intensidad_ondas(screen_positions, distance_between_slits, light_wavelength, distance_to_screen):
-    wave_number = 2 * np.pi / light_wavelength
-    combined_amplitude = np.zeros(len(screen_positions), dtype=complex)
+intensidad_ondas /= np.max(intensidad_ondas)
 
-    for slit_position in [-distance_between_slits / 2, distance_between_slits / 2]:
-        for idx, pos in enumerate(screen_positions):
-            path_distance = np.sqrt((pos - slit_position) ** 2 + distance_to_screen ** 2)
-            phase_value = wave_number * path_distance
-            combined_amplitude[idx] += np.exp(1j * phase_value)
+plt.figure(figsize=(15, 10))
 
-    intensity_values = np.abs(combined_amplitude) ** 2
-    return intensity_values / np.max(intensity_values)
+plt.subplot(3, 1, 1)
+plt.bar(x, intensidad_particulas, width=0.02, color='blue', alpha=0.7)
+plt.title('Intensidad de Luz en el Objetivo - Experimento Doble Rendija (Partículas)')
+plt.xlabel('Posición en el objetivo')
+plt.ylabel('Intensidad Normalizada')
+plt.ylim(0, 1.05)
+plt.grid()
 
-intensity_ondas = calcular_intensidad_ondas(screen_positions, distance_between_slits, light_wavelength, distance_to_screen)
-plt.figure(figsize=(10, 6))
-plt.plot(screen_positions, intensity_ondas, color='blue')
-plt.fill_between(screen_positions, intensity_ondas, color='blue', alpha=0.3)
-plt.xlabel('Posición en la pantalla (m)')
-plt.ylabel('Intensidad (Ondas)')
-plt.title('Simulación del Experimento de Doble Rendija: Patrón de Interferencia de Ondas')
-plt.grid(True)
+plt.subplot(3, 1, 2)
+plt.bar(x, intensidad_cuantica, width=0.02, color='red', alpha=0.7)
+plt.title('Intensidad Cuántica de Luz en el Objetivo - Experimento Doble Rendija')
+plt.xlabel('Posición en el objetivo')
+plt.ylabel('Intensidad Normalizada')
+plt.ylim(0, 1.05)
+plt.grid()
+
+plt.subplot(3, 1, 3)
+plt.bar(x, intensidad_ondas, width=0.02, color='green', alpha=0.7)
+plt.title('Patrón de Interferencia - Experimento Doble Rendija con Ondas (Huygens-Fresnel)')
+plt.xlabel('Posición en el objetivo')
+plt.ylabel('Intensidad Normalizada')
+plt.ylim(0, 1.05)
+plt.grid()
+
+plt.tight_layout()
 plt.show()
